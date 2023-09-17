@@ -1,0 +1,30 @@
+{
+    "init":{
+        "block":[
+            ["ME", "Hi", "move left"],
+            ["Man","Hey!", "move right"],
+            ["ME", "What are you doing?", "move right"],
+            ["Man","Nothing\nI'm moving around and hide by someone...", "alpha 50"],
+            ["ME", "mmmhhh... ok so, who is 'the man'?", "move left"],
+            ["Man","Who knows..."],
+            ["ME", {"menu":"regular", "choice":[
+                {"txt":"Am I?", "jmp":"am_i"},
+                {"txt":"Are you?", "jmp":"are_you"}
+                ]}]
+        ]
+    },
+    "am_i":{
+        "block":[
+            ["Man", "Oh good to know. You never catch me.", "alpha 0"],
+            ["ME", "Are you ok?"],
+            ["Man", "..."],
+            ["ME", "Can you hear me?"],
+            ["","","jmp are_you"]
+        ]
+    },
+    "are_you":{
+        "block":[
+            ["Man", "I never expect that!\nOk is everything fine.", "alpha 255"]
+        ]
+    }
+}
