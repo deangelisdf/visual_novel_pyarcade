@@ -1,7 +1,7 @@
 {
     "init":{
         "block":[
-            ["ME", "Hi", "move left"],
+            ["ME", "Hi", "move left", "restart all"],
             ["Man","Hey!", "move right"],
             ["ME", "What are you doing?", "move right"],
             ["Man","Nothing\nI'm moving around and hide by someone...", "alpha 50"],
