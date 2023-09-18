@@ -114,6 +114,7 @@ class GraphicNovel(arcade.View):
                 anchor_x="left", anchor_y="bottom", child=UIBorder(self.box_dlg)))
         self.manager.add(UIAnchorWidget(
                 anchor_x="center_x", anchor_y="center_y", child=self.v_box))
+        path_dialog = arcade.resources.resolve_resource_path(path_dialog)
         self.setup_dialog(path_dialog)
         self.set_color_text(constants.DEFAULT_COLOR_TEXT)
         self.__next_step()
