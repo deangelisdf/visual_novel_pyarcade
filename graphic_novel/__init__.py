@@ -227,6 +227,7 @@ class GraphicNovel(arcade.View):
             self.text_area.set_text(node_dlg.text)
             self.__action_video(node_dlg.char_name, node_dlg.action)
         elif isinstance(node_dlg, ast_dialog.Menu):
+            self._skip_dlg = False
             for case in node_dlg.cases:
                 button = UIFlatButton(text=case.label, width=200)
                 self.__jump_next[case.label] = case.block.name
