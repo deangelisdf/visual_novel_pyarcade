@@ -20,7 +20,7 @@ class GraphicNovel(arcade.View):
         self.ptr_blocks= None
         self.jump_next: Dict[str,str] = {}
         self.text_area:  UITextArea= None #conteinar text
-        self.title_area: UITextArea= None #conteinar title
+        self.title_area: UILabel   = None #conteinar title
         self.v_box   = UIBoxLayout() #container button for menu
         self.box_dlg = UIBoxLayout()
 
@@ -29,13 +29,16 @@ class GraphicNovel(arcade.View):
         
         self.__dict_char: Dict[str, arcade.Sprite] = {}
         
-        self.__events: Dict[str, Callable[[], int]] = {}
+        self.__events: Dict[str, Callable[['GraphicNovel'], int]] = {}
 
         self.__dialog_end:bool = False
-        arcade.set_background_color(arcade.color.AMAZON)
+        self.__filter_video:list = []
 
     def add_event(self, name_event: str, event: Callable[[], int]) -> None:
         self.__events[name_event] = event
+
+    def add_filter_video(self, filter) -> None:
+        self.__filter_video.append(filter)
 
     @property
     def ended(self) -> bool:
@@ -58,7 +61,7 @@ class GraphicNovel(arcade.View):
         self.manager.enable()
         self.left_side_screen.clear()
         self.right_side_screen.clear()
-        arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
+        arcade.set_background_color(arcade.color.AFRICAN_VIOLET)
         height_25perc  = (self.window.height * 25)/100
         self.text_area = UITextArea(
                                width=self.window.width-10,
@@ -75,13 +78,31 @@ class GraphicNovel(arcade.View):
         self.setup_dialog(path_dialog)
         self.__next_step()
 
+    def set_color_text(self, color: arcade.RGBA):
+        self.text_area.doc.set_style(0, 12, dict(color=arcade.get_four_byte_color(color)))
+        self.title_area.label.document.set_style(0, len(self.title_area.text), dict(color=arcade.get_four_byte_color(color)))
+
     def setup_dialog(self, path_dialog: str) -> None:
         self.dialog = parser_dialog.parsing(path_dialog)
         self.ptr_blocks = iter(self.dialog.blocks[constants.INIT_BLOCK].block)
 
     def on_draw(self) -> None:
         """ Draw everything """
-        self.clear()
+        #self.clear()
+        if len(self.__filter_video) > 0:
+            for filter_video in self.__filter_video:
+                filter_video.use()
+                filter_video.clear()
+            self.draw()
+            self.window.use()
+            self.window.clear()
+            for filter_video in self.__filter_video:
+                filter_video.draw()
+        else:
+            self.window.use()
+            self.window.clear()
+            self.draw()
+    def draw(self):
         for idx, sprite_left in enumerate(self.left_side_screen):
             sprite_left.bottom = self.box_dlg.top
             sprite_left.left = 10 + idx*5
@@ -93,7 +114,6 @@ class GraphicNovel(arcade.View):
         self.manager.draw()
         if self._skip_dlg:
             arcade.draw_text("SKIPPING", 1, 1, font_size=15)
-    
     def __jmp_next_dialog(self, label:str)->None:
         assert(label in self.dialog.blocks)
         self.ptr_blocks = iter(self.dialog.blocks[label].block)
@@ -121,7 +141,7 @@ class GraphicNovel(arcade.View):
         sprite.alpha = int(arg,10)
     def __event_action(self, sprite:arcade.Sprite, arg:str) -> None:
         if arg in self.__events:
-            res = self.__events[arg]()
+            res = self.__events[arg](self)
             print(res) #TODO use for next action in same way
     def __shake_action(self, sprite:arcade.Sprite, arg:str) -> None:
         assert(arg in self.__dict_char)

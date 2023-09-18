@@ -15,7 +15,7 @@
     },
     "am_i":{
         "block":[
-            ["Man", "Oh good to know. You never catch me.", "alpha 0"],
+            ["Man", "Oh good to know. You never catch me.", "alpha 0", "event event1"],
             ["ME", "Are you ok?"],
             ["Man", "..."],
             ["ME", "Can you hear me?"],
@@ -24,7 +24,13 @@
     },
     "are_you":{
         "block":[
-            ["Man", "I never expect that!\nOk is everything fine.", "alpha 255"]
+            ["Man", "I never expect that!\nOk is everything fine.", "alpha 255"],
+            ["ME", {"menu":"regular", "choice":[
+                {"txt":"restart", "jmp":"init"},
+                {"txt":"No", "jmp":"end"}]}]
         ]
+    },
+    "end":{
+        "block":[]
     }
 }
