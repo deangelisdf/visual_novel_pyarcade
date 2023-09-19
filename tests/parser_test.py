@@ -7,7 +7,7 @@ import unittest
 src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, src_path)
 
-import graphic_novel
+import graphic_novel # noqa: E402
 
 class parser_testing(unittest.TestCase):
     def test_parsing_empty_dialog(self):
@@ -49,7 +49,6 @@ class parser_testing(unittest.TestCase):
             self.assertTrue(parse_exept.label == "init")
             except_done = True
         self.assertTrue(except_done)
-
 
 if __name__ == "__main__":
     unittest.main()

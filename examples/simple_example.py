@@ -1,9 +1,10 @@
-import os, sys
-src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, src_path)
+import os
+import sys
 import arcade
 from pyglet.math import Vec2
-import graphic_novel
+src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, src_path)
+import graphic_novel # noqa: E402
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
