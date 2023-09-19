@@ -1,6 +1,9 @@
+import os, sys
+src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, src_path)
 import arcade
-import graphic_novel
 from pyglet.math import Vec2
+import graphic_novel
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
