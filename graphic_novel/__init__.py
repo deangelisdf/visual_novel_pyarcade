@@ -13,6 +13,7 @@ from arcade.gui.widgets import UITextArea, UILabel, UIBorder
 from graphic_novel.dlg_parser import parser_dialog
 from graphic_novel.dlg_parser import ast_dialog
 import graphic_novel.constants as constants
+import graphic_novel.actions as actions
 
 class UITypingTextArea(UITextArea):
     """UI TextArea specialized in a typing animation"""
@@ -76,6 +77,14 @@ class GraphicNovel(arcade.View):
         self.__dialog_end:bool = False
         self.__filter_video:list = []
 
+        self.__strategy_action = {
+            constants.MOVE_ACTION_TOKEN: actions.MoveAction(self),
+            constants.ALPHA_TOKEN:   actions.SetAlphaAction(self),
+            constants.EVENT_TOKEN:   actions.EventAction(self),
+            constants.JUMP_TOKEN:    actions.JmpAction(self),
+            constants.SHAKE_TOKEN:   actions.ShakeAction(self),
+            constants.RESTART_TOKEN: actions.RestartAction(self) }
+
     def on_ended(self, context: 'GraphicNovel'):
         """This method represent the END of dialog"""
         pass
@@ -88,6 +97,15 @@ class GraphicNovel(arcade.View):
     def add_filter_video(self, filter_video) -> None:
         """add GLS filters"""
         self.__filter_video.append(filter_video)
+    @property
+    def event_table(self) -> Dict[str, Callable[['GraphicNovel'], int]]:
+        return self.__events
+    @property
+    def video_filters(self) -> list:
+        return self.__filter_video
+    @video_filters.deleter
+    def video_filters(self) -> None:
+        self.__filter_video.clear()
 
     @property
     def ended(self) -> bool:
@@ -171,7 +189,7 @@ class GraphicNovel(arcade.View):
         self.manager.draw()
         if self._skip_dlg:
             arcade.draw_text("SKIPPING", 1, 1, font_size=15)
-    def __jmp_next_dialog(self, label:str)->None:
+    def jmp_next_dialog(self, label:str)->None:
         """Generic implementation of jump action between a dialog block to another"""
         assert label in self.dialog.blocks
         self.history_labels.append(label)
@@ -180,46 +198,19 @@ class GraphicNovel(arcade.View):
         self.__next_step()
     def __jump_next_dialog(self, event: UIOnClickEvent) -> None:
         jmp_label = self.__jump_next[event.source.text]
-        self.__jmp_next_dialog(jmp_label)
+        self.jmp_next_dialog(jmp_label)
 
-    def __remove_pg_from_lists(self, sprite:arcade.Sprite) -> None:
+    def _remove_pg_from_lists(self, sprite:arcade.Sprite) -> None:
         if sprite in self.left_side_screen:
             self.left_side_screen.remove(sprite)
         elif sprite in self.right_side_screen:
             self.right_side_screen.remove(sprite)
 
-    def __move_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        self.__remove_pg_from_lists(sprite)
-        if arg == constants.LEFT_TOKEN:
-            self.left_side_screen.append(sprite)
-        elif arg == constants.RIGHT_TOKEN:
-            self.right_side_screen.append(sprite)
-    def __jmp_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        self.__jmp_next_dialog(arg)
-    def __set_alpha_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        sprite.alpha = int(arg,10)
-    def __event_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        if arg in self.__events:
-            res = self.__events[arg](self)
-            print(res) #TODO use for next action in same way
-    def __shake_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        assert arg in self.__dict_char #TODO
-    def __restart_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        self.left_side_screen.clear()
-        self.right_side_screen.clear()
-        self.__filter_video.clear()
-        self.set_color_text(constants.DEFAULT_COLOR_TEXT)
     def __interpreting_action(self, sprite:arcade.Sprite, tok:List[str]) -> None:
         """Actions are defined with 2 words, action and argument"""
-        strategy = {constants.MOVE_ACTION_TOKEN: self.__move_action,
-                    constants.ALPHA_TOKEN: self.__set_alpha_action,
-                    constants.EVENT_TOKEN: self.__event_action,
-                    constants.JUMP_TOKEN:  self.__jmp_action,
-                    constants.SHAKE_TOKEN: self.__shake_action,
-                    constants.RESTART_TOKEN: self.__restart_action }
         assert len(tok) == 2
-        assert tok[0] in strategy
-        strategy[tok[0]](sprite, tok[1])
+        assert tok[0] in self.__strategy_action
+        self.__strategy_action[tok[0]](sprite, tok[1])
 
     def __action_video(self, name_pg:str, actions:List[str]) -> None:
         if name_pg not in self.__dict_char:
