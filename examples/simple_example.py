@@ -26,6 +26,12 @@ def event1(gn: graphic_novel.GraphicNovel) -> int:
     gn.set_color_text((255,0,0,255))
     return 1
 
+def event_request(gn: graphic_novel.GraphicNovel) -> int:
+    data = gn.input_text.text
+    print(data)
+    gn.jmp_next_dialog(data) # select a label inside dialog
+    return 1
+
 def end_game(context: graphic_novel.GraphicNovel):
     """function used at the end of dialog"""
     print("end. last dialog:", context.history_labels[-1])
@@ -40,6 +46,7 @@ def main():
                             "Man":arcade.Sprite(PATH_CHARACTER_2)}
     game_view.setup(":res:dialog.json")
     game_view.add_event("event1", event1)
+    game_view.add_event("event_request", event_request)
     game_view.on_ended = end_game
     window.show_view(game_view)
     arcade.run()

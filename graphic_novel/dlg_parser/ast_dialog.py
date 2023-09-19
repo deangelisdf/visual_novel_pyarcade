@@ -106,6 +106,20 @@ class Menu(Node):
     def __iter__(self):
         yield self.cases
     attr_names = ()
+
+class Request(Node):
+    __slots__ = ('type_request', 'event_name', '__weakref__')
+    def __init__(self):
+        super().__init__()
+        self.type_request:str = ""
+        self.event_name:str   = ""
+    def children(self):
+        return ('event_name', self.event_name)
+    def __iter__(self):
+        return
+        yield
+    attr_names = ()
+    
 class Jump(Node):
     __slots__ = ('name', '__weakref__')
     def __init__(self, name):

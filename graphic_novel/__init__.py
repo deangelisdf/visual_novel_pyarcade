@@ -9,11 +9,13 @@ from typing import List, Dict, Callable
 import arcade
 from arcade.gui import UIManager, UIBoxLayout, UIAnchorWidget
 from arcade.gui import UIFlatButton, UIOnClickEvent
-from arcade.gui.widgets import UITextArea, UILabel, UIBorder
+from arcade.gui.widgets import UITextArea, UILabel, UIBorder, UIInputText
 from graphic_novel.dlg_parser import parser_dialog
 from graphic_novel.dlg_parser import ast_dialog
 import graphic_novel.constants as constants
 import graphic_novel.actions as actions
+
+INPUT_CHECK_DEFAULT = {"check":False, "type":"text", "evt":""}
 
 class UITypingTextArea(UITextArea):
     """UI TextArea specialized in a typing animation"""
@@ -57,6 +59,7 @@ class GraphicNovel(arcade.View):
         # Call the parent class initializer
         super().__init__()
         self._skip_dlg  = False
+        self.__not_skippable = True
         self._skip_time = 0.0
         self.manager = UIManager()
         self.dialog:ast_dialog.Node = None
@@ -64,7 +67,8 @@ class GraphicNovel(arcade.View):
         self.history_labels:List[str] = []
         self.__jump_next: Dict[str,str] = {}
         self.text_area:  UITypingTextArea= None #conteinar text
-        self.title_area: UILabel   = None #conteinar title
+        self.title_area: UILabel    = None #conteinar title
+        self.input_text: UIInputText= None
         self.v_box   = UIBoxLayout() #container button for menu
         self.box_dlg = UIBoxLayout()
 
@@ -73,7 +77,7 @@ class GraphicNovel(arcade.View):
         self.__dict_char: Dict[str, arcade.Sprite] = {}
         
         self.__events: Dict[str, Callable[['GraphicNovel'], int]] = {}
-
+        self.input_text_check = INPUT_CHECK_DEFAULT.copy()
         self.__dialog_end:bool = False
         self.__filter_video:list = []
 
@@ -131,6 +135,8 @@ class GraphicNovel(arcade.View):
         self.left_side_screen.clear()
         self.right_side_screen.clear()
         self.history_labels.clear()
+        self.__not_skippable = True
+        self.input_text_check = INPUT_CHECK_DEFAULT.copy()
         arcade.set_background_color(arcade.color.AFRICAN_VIOLET)
         height_25perc  = (self.window.height * 25)/100
         self.text_area = UITypingTextArea(
@@ -139,6 +145,8 @@ class GraphicNovel(arcade.View):
                                text="")
         self.title_area= UILabel(width=self.window.width-10, height=30,
                                     text="")
+        self.input_text = UIInputText(width=self.window.width-10,
+                               height=height_25perc)
         self.box_dlg.add(UIBorder(self.title_area))
         self.box_dlg.add(self.text_area)
         self.manager.add(UIAnchorWidget(
@@ -156,6 +164,8 @@ class GraphicNovel(arcade.View):
         self.title_area.label.document.set_style(0,
                         len(self.title_area.text),
                         dict(color=arcade.get_four_byte_color(color)))
+        self.input_text.doc.set_style(0, 12,
+                                     dict(color=arcade.get_four_byte_color(color)))
 
     def setup_dialog(self, path_dialog: str) -> None:
         self.dialog = parser_dialog.parsing(path_dialog)
@@ -221,25 +231,48 @@ class GraphicNovel(arcade.View):
             tok = action.split()
             self.__interpreting_action(sprite, tok)
 
+    def __generate_regular_menu(self, cases:ast_dialog.BlockInstr) -> None:
+        for case in cases:
+            button = UIFlatButton(text=case.label, width=200)
+            self.__jump_next[case.label] = case.block[0].name
+            self.v_box.add(button.with_space_around(bottom=1))
+            button.on_click = self.__jump_next_dialog
+            self.v_box.add(button)
+
+    def __generate_request(self, req_node:ast_dialog.Request) -> None:
+        self.box_dlg.remove(self.text_area)
+        self.box_dlg.add(self.input_text)
+        self.input_text_check["check"] = True
+        self.input_text_check["evt"]   = req_node.event_name
+        self.input_text_check["type"]  = req_node.type_request
+
     def __next_step(self) -> None:
         try:
             node_dlg = next(self.ptr_blocks)
         except StopIteration:
+            self.__not_skippable = False
             self.__dialog_end = True
             self.on_ended(self)
             return
+        self.__not_skippable = True
         if isinstance(node_dlg, ast_dialog.Dialog):
             self.title_area.text= node_dlg.char_name
             self.text_area.set_text(node_dlg.text)
             self.__action_video(node_dlg.char_name, node_dlg.action)
         elif isinstance(node_dlg, ast_dialog.Menu):
             self._skip_dlg = False
-            for case in node_dlg.cases:
-                button = UIFlatButton(text=case.label, width=200)
-                self.__jump_next[case.label] = case.block[0].name
-                self.v_box.add(button.with_space_around(bottom=1))
-                button.on_click = self.__jump_next_dialog
-                self.v_box.add(button)
+            self.__not_skippable = False
+            if node_dlg.type_menu != "regular":
+                raise NotImplementedError(
+                    f"{node_dlg.type_menu} menu is not implemented")
+            self.__generate_regular_menu(node_dlg.cases)
+        elif isinstance(node_dlg, ast_dialog.Request):
+            self._skip_dlg = False
+            self.__not_skippable = False
+            if node_dlg.type_request not in ["text", "int"]:
+                raise NotImplementedError(
+                    f"{node_dlg.type_request} request is not implemented")
+            self.__generate_request(node_dlg)
 
     def update(self, delta_time: float) -> None:
         if self._skip_time<=constants.SKIP_TIME:
@@ -250,9 +283,20 @@ class GraphicNovel(arcade.View):
         return super().update(delta_time)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        if symbol == arcade.key.TAB:
+        if symbol == arcade.key.TAB and self.__not_skippable:
             self._skip_dlg = not self._skip_dlg
         elif symbol == arcade.key.ENTER:
+            if self.input_text_check["check"]:
+                if self.input_text_check["type"] == "int":
+                    try:
+                        int(self.input_text.text, 10)
+                    except ValueError:
+                        self.input_text.text = "0"
+                self.__events[self.input_text_check["evt"]](self)
+                self.input_text_check = INPUT_CHECK_DEFAULT.copy()
+                self.input_text.text  = "" 
+                self.box_dlg.remove(self.input_text)
+                self.box_dlg.add(self.text_area)
             self.__next_step()
 
 __author__ = "dfdeangelis"

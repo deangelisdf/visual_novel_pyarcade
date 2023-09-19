@@ -19,6 +19,7 @@
             ["ME", "Are you ok?"],
             ["Man", "..."],
             ["ME", "Can you hear me?"],
+            ["ME", {"request":"text", "event": "event_request"}],
             ["","","jmp are_you"]
         ]
     },

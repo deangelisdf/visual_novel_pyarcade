@@ -3,6 +3,7 @@ author: domenico francesco de angelis"""
 import sys
 import os
 import unittest
+from typing import Callable
 
 src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, src_path)
@@ -64,10 +65,12 @@ class parser_testing(unittest.TestCase):
             self.assertTrue(case.label == menu["choice"][idx]["txt"])
             self.assertTrue(isinstance(case.block, list))
             self.assertTrue(case.block[0].name == menu["choice"][idx]["jmp"])
-    def _except_menu_token(self, menu:dict, token:str):
+    def _except_token(self, 
+                      parser: Callable[[str, dict], graphic_novel.ast_dialog.Node],
+                      menu:dict, token:str):
         except_done = False
         try:
-            graphic_novel.parser_dialog._parse_menu("dump", menu)
+            parser("dump", menu)
         except graphic_novel.parser_dialog.ParseExcept as parse_exept:
             self.assertTrue(parse_exept.what == f"{token} miss")
             self.assertTrue(parse_exept.label == "dump")
@@ -84,17 +87,31 @@ class parser_testing(unittest.TestCase):
         self.assertTrue(except_done)
     def test_except_menu(self):
         menu = {"menu":"regular"}
-        self._except_menu_token(menu,
-                                graphic_novel.parser_dialog.CHOICE_TOKEN)
+        self._except_token(graphic_novel.parser_dialog._parse_menu,
+                           menu,
+                           graphic_novel.parser_dialog.CHOICE_TOKEN)
         menu["choice"] = []
         self._except_empty_choice(menu)
         menu["choice"] = [{"jmp":"label"}]
-        self._except_menu_token(menu,
-                                graphic_novel.parser_dialog.TXT_MENU_TOKEN)
+        self._except_token(graphic_novel.parser_dialog._parse_menu,
+                           menu,
+                           graphic_novel.parser_dialog.TXT_MENU_TOKEN)
         menu["choice"] = [{"txt":"label"}]
-        self._except_menu_token(menu,
-                                graphic_novel.parser_dialog.JMP_MENU_TOKEN)
-
+        self._except_token(graphic_novel.parser_dialog._parse_menu,
+                           menu,
+                           graphic_novel.parser_dialog.JMP_MENU_TOKEN)
+    def test_request(self):
+       req = {"request":"text", "event": "event_request"}
+       req_node = graphic_novel.parser_dialog._parse_request("dump", req)
+       self.assertTrue(isinstance(req_node,
+                                  graphic_novel.ast_dialog.Request))
+       self.assertTrue(req_node.event_name==req["event"])
+       self.assertTrue(req_node.type_request=="text")
+    def test_except_request(self):
+        req = {"request":"text"}
+        self._except_token(graphic_novel.parser_dialog._parse_request,
+                           req,
+                           graphic_novel.parser_dialog.EVT_REQ_TOKEN)
 
 if __name__ == "__main__":
     unittest.main()
