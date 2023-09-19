@@ -11,7 +11,7 @@ import graphic_novel.constants as constants
 class Action:
     """Generic class to define an Action
     Command Desing pattern implementation"""
-    def __init__(self, graphic_novel: 'GraphicNovel'):
+    def __init__(self, graphic_novel):
         self.machine = graphic_novel
     def __call__(self, sprite: arcade.Sprite, arg:str) -> int:
         pass
