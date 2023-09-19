@@ -13,6 +13,8 @@ import graphic_novel # noqa: E402
 import graphic_novel.dlg_parser.ast_dialog as ast_dlg # noqa: E402
 from graphic_novel import actions # noqa: E402
 
+IN_GITHUB_ACTIONS = os.getenv("GITHUB_ACTIONS") == "true"
+
 class StubText:
     """Used as Mock of arcade UIText and UILabel"""
     def __init__(self):
@@ -23,26 +25,28 @@ class StubText:
         self.text = txt
 
 #Global definition to enabling tests
-window  = arcade.open_window(100, 100)
-gn_view = graphic_novel.GraphicNovel()
-gn_view.text_area = StubText()
-gn_view.title_area= StubText()
-gn_view.dialog = ast_dlg.RootDialog(
+if not IN_GITHUB_ACTIONS:
+    window  = arcade.open_window(100, 100)
+    gn_view = graphic_novel.GraphicNovel()
+    gn_view.text_area = StubText()
+    gn_view.title_area= StubText()
+    gn_view.dialog = ast_dlg.RootDialog(
                         "dump",
                         [ast_dlg.BlockInstr("init", []),
-                         ast_dlg.BlockInstr("label", [
-                             ast_dlg.Dialog("title_label","txt_label", "")
-                             ])])
-texture:arcade.Texture = arcade.texture.make_circle_texture(30, arcade.color.AERO_BLUE)
-dict_char = {"Me":arcade.Sprite(texture=texture)}
-gn_view.characters = dict_char
+                        ast_dlg.BlockInstr("label", [
+                            ast_dlg.Dialog("title_label","txt_label","")
+                            ])])
+    texture:arcade.Texture = arcade.texture.make_circle_texture(
+                                    30, arcade.color.AERO_BLUE)
+    dict_char = {"Me":arcade.Sprite(texture=texture)}
+    gn_view.characters = dict_char
 
 #global variable test EVENT
 called_event = False
 
 #TESTs
-
 class actions_testing(unittest.TestCase):
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
     def test_move(self):
         move_action = actions.MoveAction(gn_view)
         move_action(texture, "left")
@@ -60,12 +64,14 @@ class actions_testing(unittest.TestCase):
         move_action(texture, "asdf")
         self.assertTrue(len(gn_view.left_side_screen)  == 0)
         self.assertTrue(len(gn_view.right_side_screen) == 0)
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
     def test_jump(self):
         jmp = actions.JmpAction(gn_view)
         jmp(None, "label")
         self.assertTrue(gn_view.history_labels[-1] == "label")
         self.assertTrue(gn_view.title_area.text == "title_label")
         self.assertTrue(gn_view.text_area.text  == "txt_label")
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
     def test_alpha(self):
         except_ve = False
         alpha = actions.SetAlphaAction(gn_view)
@@ -76,6 +82,7 @@ class actions_testing(unittest.TestCase):
         except ValueError:
             except_ve = True
         self.assertTrue(except_ve)
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
     def test_event(self):
         global called_event
         called_event = False
@@ -88,6 +95,7 @@ class actions_testing(unittest.TestCase):
         t = evt(None, "ev1")
         self.assertTrue(t == 1)
         self.assertTrue(called_event)
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
     def test_RestartAction(self):
         restart = actions.RestartAction(gn_view)
         gn_view.add_filter_video(None)

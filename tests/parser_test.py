@@ -94,7 +94,7 @@ class parser_testing(unittest.TestCase):
         menu["choice"] = [{"txt":"label"}]
         self._except_menu_token(menu,
                                 graphic_novel.parser_dialog.JMP_MENU_TOKEN)
-        
+
 
 if __name__ == "__main__":
     unittest.main()
