@@ -1,25 +1,35 @@
-import random
+"""filename: __init__.py
+Graphic novel (per arcade python)
+View implementation to simplify the dialog system
+in "graphic novel" way
+
+author: Domenico Francesco De Angelis
+"""
 from typing import List, Dict, Callable
 import arcade
-from arcade.gui import UIManager, UIBoxLayout, UIAnchorWidget, UIFlatButton, UIOnClickEvent
+from arcade.gui import UIManager, UIBoxLayout, UIAnchorWidget
+from arcade.gui import UIFlatButton, UIOnClickEvent
 from arcade.gui.widgets import UITextArea, UILabel, UIBorder
 from graphic_novel.dlg_parser import parser_dialog
 from graphic_novel.dlg_parser import ast_dialog
 import graphic_novel.constants as constants
 
 class UITypingTextArea(UITextArea):
-    def __init__(self, x: float = 0, y: float = 0, width: float = 400, height: float = 40, 
+    """UI TextArea specialized in a typing animation"""
+    def __init__(self, x:float = 0, y:float = 0, width:float = 400, height:float = 40,
                  text: str = "", font_name = ('Arial',), font_size: float = 12,
-                 text_color: arcade.Color = (255,255,255,255), multiline: bool = True,
-                 scroll_speed: float = None, size_hint=None, size_hint_min=None, size_hint_max=None,
-                 style=None, **kwargs):
-        super().__init__(x, y, width, height, text, font_name, font_size, text_color, multiline, scroll_speed, size_hint, size_hint_min, size_hint_max, style, **kwargs)
+                 text_color:arcade.Color = (255,255,255,255), multiline: bool = True,
+                 scroll_speed:float = None, size_hint=None, size_hint_min=None,
+                 size_hint_max=None, style=None, **kwargs):
+        super().__init__(x, y, width, height, text, font_name, font_size, text_color,
+                         multiline, scroll_speed, size_hint, size_hint_min,
+                         size_hint_max, style, **kwargs)
         self.__text_to_write:str = ""
         self.delay_typing = constants.DELAY_WRITING_TIME
         self.__last_delay_typing:float = 0.0
         self.instant_write = False
         self.counter_char:int = 0
-    def set_text(self, text: str):
+    def set_text(self, text: str) -> None:
         if self.instant_write:
             self.text = text
             self.__text_to_write = ""
@@ -28,7 +38,7 @@ class UITypingTextArea(UITextArea):
             self.text = ""
         self.counter_char = 0
         self.__last_delay_typing = 0.0
-    def on_update(self, dt):
+    def on_update(self, dt:float) -> None:
         if self.counter_char < len(self.__text_to_write):
             if self.__last_delay_typing >= self.delay_typing:
                 self.__last_delay_typing = 0.0
@@ -39,7 +49,8 @@ class UITypingTextArea(UITextArea):
         return super().on_update(dt)
 
 class GraphicNovel(arcade.View):
-    """ Our custom Window Class"""
+    """This View is used to implement
+    the essential graphic novel"""
     def __init__(self):
         """ Initializer """
         # Call the parent class initializer
@@ -48,7 +59,8 @@ class GraphicNovel(arcade.View):
         self._skip_time = 0.0
         self.manager = UIManager()
         self.dialog:ast_dialog.Node = None
-        self.ptr_blocks= None
+        self.ptr_blocks = None
+        self.history_labels:List[str] = []
         self.__jump_next: Dict[str,str] = {}
         self.text_area:  UITypingTextArea= None #conteinar text
         self.title_area: UILabel   = None #conteinar title
@@ -57,7 +69,6 @@ class GraphicNovel(arcade.View):
 
         self.left_side_screen:List[arcade.Sprite]  = []
         self.right_side_screen:List[arcade.Sprite] = []
-        
         self.__dict_char: Dict[str, arcade.Sprite] = {}
         
         self.__events: Dict[str, Callable[['GraphicNovel'], int]] = {}
@@ -65,17 +76,18 @@ class GraphicNovel(arcade.View):
         self.__dialog_end:bool = False
         self.__filter_video:list = []
 
-    def on_ended(self):
+    def on_ended(self, context: 'GraphicNovel'):
         """This method represent the END of dialog"""
         pass
 
-    def add_event(self, name_event: str, event: Callable[['GraphicNovel'], int]) -> None:
+    def add_event(self, name_event: str,
+                  event: Callable[['GraphicNovel'], int]) -> None:
         """Add event to active in dialog json"""
         self.__events[name_event] = event
 
-    def add_filter_video(self, filter) -> None:
+    def add_filter_video(self, filter_video) -> None:
         """add GLS filters"""
-        self.__filter_video.append(filter)
+        self.__filter_video.append(filter_video)
 
     @property
     def ended(self) -> bool:
@@ -100,6 +112,7 @@ class GraphicNovel(arcade.View):
         self.manager.enable()
         self.left_side_screen.clear()
         self.right_side_screen.clear()
+        self.history_labels.clear()
         arcade.set_background_color(arcade.color.AFRICAN_VIOLET)
         height_25perc  = (self.window.height * 25)/100
         self.text_area = UITypingTextArea(
@@ -120,8 +133,11 @@ class GraphicNovel(arcade.View):
         self.__next_step()
 
     def set_color_text(self, color: arcade.RGBA):
-        self.text_area.doc.set_style(0, 12, dict(color=arcade.get_four_byte_color(color)))
-        self.title_area.label.document.set_style(0, len(self.title_area.text), dict(color=arcade.get_four_byte_color(color)))
+        self.text_area.doc.set_style(0, 12,
+                                     dict(color=arcade.get_four_byte_color(color)))
+        self.title_area.label.document.set_style(0,
+                        len(self.title_area.text),
+                        dict(color=arcade.get_four_byte_color(color)))
 
     def setup_dialog(self, path_dialog: str) -> None:
         self.dialog = parser_dialog.parsing(path_dialog)
@@ -157,7 +173,8 @@ class GraphicNovel(arcade.View):
             arcade.draw_text("SKIPPING", 1, 1, font_size=15)
     def __jmp_next_dialog(self, label:str)->None:
         """Generic implementation of jump action between a dialog block to another"""
-        assert(label in self.dialog.blocks)
+        assert label in self.dialog.blocks
+        self.history_labels.append(label)
         self.ptr_blocks = iter(self.dialog.blocks[label].block)
         self.v_box.clear()
         self.__next_step()
@@ -186,9 +203,7 @@ class GraphicNovel(arcade.View):
             res = self.__events[arg](self)
             print(res) #TODO use for next action in same way
     def __shake_action(self, sprite:arcade.Sprite, arg:str) -> None:
-        assert(arg in self.__dict_char)
-        #TODO
-        pass
+        assert arg in self.__dict_char #TODO
     def __restart_action(self, sprite:arcade.Sprite, arg:str) -> None:
         self.left_side_screen.clear()
         self.right_side_screen.clear()
@@ -202,12 +217,12 @@ class GraphicNovel(arcade.View):
                     constants.JUMP_TOKEN:  self.__jmp_action,
                     constants.SHAKE_TOKEN: self.__shake_action,
                     constants.RESTART_TOKEN: self.__restart_action }
-        assert(len(tok) == 2)
-        assert(tok[0] in strategy)
+        assert len(tok) == 2
+        assert tok[0] in strategy
         strategy[tok[0]](sprite, tok[1])
 
     def __action_video(self, name_pg:str, actions:List[str]) -> None:
-        if not name_pg in self.__dict_char:
+        if name_pg not in self.__dict_char:
             sprite = None
         else:
             sprite = self.__dict_char[name_pg]
@@ -220,7 +235,7 @@ class GraphicNovel(arcade.View):
             node_dlg = next(self.ptr_blocks)
         except StopIteration:
             self.__dialog_end = True
-            self.on_ended()
+            self.on_ended(self)
             return
         if isinstance(node_dlg, ast_dialog.Dialog):
             self.title_area.text= node_dlg.char_name
@@ -248,3 +263,5 @@ class GraphicNovel(arcade.View):
             self._skip_dlg = not self._skip_dlg
         elif symbol == arcade.key.ENTER:
             self.__next_step()
+
+__author__ = "dfdeangelis"

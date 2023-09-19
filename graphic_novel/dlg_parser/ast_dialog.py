@@ -1,6 +1,11 @@
+"""filename: ast_dialog.py
+used to develop the classes to rapresent the Dialog Tree
+in all possible nodes.
+author: Domenico Francesco De Angelis
+"""
 class Node:
     """Abstract base class for AST nodes."""
-    __slots__ = ('inner')
+    __slots__ = ('inner', )
     def __init__(self):
         self.inner = 0
     def __repr__(self):
@@ -73,9 +78,12 @@ class If(Node):
         self.iffalse = iffalse
     def children(self):
         nodelist = []
-        if self.cond is not None: nodelist.append(("cond", self.cond))
-        if self.iftrue is not None: nodelist.append(("iftrue", self.iftrue))
-        if self.iffalse is not None: nodelist.append(("iffalse", self.iffalse))
+        if self.cond is not None:
+            nodelist.append(("cond", self.cond))
+        if self.iftrue is not None:
+            nodelist.append(("iftrue", self.iftrue))
+        if self.iffalse is not None:
+            nodelist.append(("iffalse", self.iffalse))
         return tuple(nodelist)
     def __iter__(self):
         if self.cond is not None:
@@ -148,3 +156,6 @@ KEYWORDS_AST = {
     KEYWORDS[3]: If,
     KEYWORDS[4]: Show
 }
+
+
+__author__ = "dfdeangelis"
