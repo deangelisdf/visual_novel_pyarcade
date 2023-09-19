@@ -13,5 +13,6 @@ EVENT_TOKEN   = "event"
 SHAKE_TOKEN   = "shake"
 JUMP_TOKEN    = "jmp"
 RESTART_TOKEN = "restart"
+SET_BG_TOKEN  = "bg"
 
 __author__ = "dfdeangelis"

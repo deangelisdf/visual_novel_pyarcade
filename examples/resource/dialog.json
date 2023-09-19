@@ -1,7 +1,7 @@
 {
     "init":{
         "block":[
-            ["ME", "Hi", "move left", "restart all"],
+            ["ME", "Hi", "move left", "bg :resources:images/backgrounds/abstract_1.jpg"],
             ["Man","Hey!", "move right"],
             ["ME", "What are you doing?", "move right"],
             ["Man","Nothing\nI'm moving around and hide by someone...", "alpha 50"],
@@ -20,7 +20,7 @@
             ["Man", "..."],
             ["ME", "Can you hear me?"],
             ["ME", {"request":"text", "event": "event_request"}],
-            ["","","jmp are_you"]
+            ["","", "restart all", "jmp are_you"]
         ]
     },
     "are_you":{

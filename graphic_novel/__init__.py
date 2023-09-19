@@ -72,6 +72,7 @@ class GraphicNovel(arcade.View):
         self.v_box   = UIBoxLayout() #container button for menu
         self.box_dlg = UIBoxLayout()
 
+        self.background_texture: arcade.Texture = None
         self.left_side_screen:List[arcade.Sprite]  = []
         self.right_side_screen:List[arcade.Sprite] = []
         self.__dict_char: Dict[str, arcade.Sprite] = {}
@@ -80,14 +81,15 @@ class GraphicNovel(arcade.View):
         self.input_text_check = INPUT_CHECK_DEFAULT.copy()
         self.__dialog_end:bool = False
         self.__filter_video:list = []
-
+        
         self.__strategy_action = {
             constants.MOVE_ACTION_TOKEN: actions.MoveAction(self),
             constants.ALPHA_TOKEN:   actions.SetAlphaAction(self),
             constants.EVENT_TOKEN:   actions.EventAction(self),
             constants.JUMP_TOKEN:    actions.JmpAction(self),
             constants.SHAKE_TOKEN:   actions.ShakeAction(self),
-            constants.RESTART_TOKEN: actions.RestartAction(self) }
+            constants.RESTART_TOKEN: actions.RestartAction(self),
+            constants.SET_BG_TOKEN:  actions.SetBackground(self) }
 
     def on_ended(self, context: 'GraphicNovel'):
         """This method represent the END of dialog"""
@@ -188,6 +190,8 @@ class GraphicNovel(arcade.View):
             self.window.clear()
             self.draw()
     def draw(self):
+        arcade.draw_texture_rectangle(self.window.width//2, self.window.height//2,
+            self.window.width, self.window.height, self.background_texture)
         for idx, sprite_left in enumerate(self.left_side_screen):
             sprite_left.bottom = self.box_dlg.top
             sprite_left.left = 10 + idx*5

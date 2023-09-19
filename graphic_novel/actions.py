@@ -61,4 +61,10 @@ class RestartAction(Action):
         self.machine.set_color_text(constants.DEFAULT_COLOR_TEXT)
         return 0
 
+class SetBackground(Action):
+    """This command can change the background"""
+    def __call__(self, sprite: arcade.Sprite, arg: str) -> int:
+        self.machine.background_texture = arcade.load_texture(arg)
+        return 0
+
 __author__ = "dfdeangelis"

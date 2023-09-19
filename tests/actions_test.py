@@ -30,6 +30,7 @@ if not IN_GITHUB_ACTIONS:
     gn_view = graphic_novel.GraphicNovel()
     gn_view.text_area = StubText()
     gn_view.title_area= StubText()
+    gn_view.input_text= StubText()
     gn_view.dialog = ast_dlg.RootDialog(
                         "dump",
                         [ast_dlg.BlockInstr("init", []),
@@ -105,6 +106,13 @@ class actions_testing(unittest.TestCase):
         self.assertTrue(len(gn_view.left_side_screen)  == 0)
         self.assertTrue(len(gn_view.right_side_screen) == 0)
         self.assertTrue(len(gn_view.video_filters)     == 0)
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
+    def test_SetBackground(self):
+        setbg = actions.SetBackground(gn_view)
+        gn_view.background_texture = None
+        setbg(None, ":resources:images/backgrounds/abstract_1.jpg")
+        self.assertFalse(gn_view.background_texture is None)
+        self.assertTrue(isinstance(gn_view.background_texture, arcade.Texture))
 
 if __name__ == "__main__":
     unittest.main()
