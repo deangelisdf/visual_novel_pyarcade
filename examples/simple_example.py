@@ -2,7 +2,7 @@ import os
 import sys
 import arcade
 from pyglet.math import Vec2
-src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
+src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, src_path)
 import graphic_novel # noqa: E402
 
@@ -34,7 +34,8 @@ def main():
     """ Main function """
     window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     game_view = graphic_novel.GraphicNovel()
-    arcade.resources.add_resource_handle("res", "resource")
+    res_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "resource")
+    arcade.resources.add_resource_handle("res", res_path)
     game_view.characters = {"ME":arcade.Sprite(PATH_CHARACTER_1),
                             "Man":arcade.Sprite(PATH_CHARACTER_2)}
     game_view.setup(":res:dialog.json")

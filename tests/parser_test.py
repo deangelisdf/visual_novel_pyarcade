@@ -49,6 +49,52 @@ class parser_testing(unittest.TestCase):
             self.assertTrue(parse_exept.label == "init")
             except_done = True
         self.assertTrue(except_done)
+    def test_menu_parsing(self):
+        menu = {
+            "menu":"regular",
+            "choice":[
+                {"txt":"Am I?", "jmp":"am_i"},
+                {"txt":"Are you?", "jmp":"are_you"}]
+               }
+        menu_node = graphic_novel.parser_dialog._parse_menu("dump", menu)
+        self.assertTrue(isinstance(menu_node, graphic_novel.ast_dialog.Menu))
+        self.assertTrue(menu_node.type_menu == menu["menu"])
+        self.assertTrue(len(menu_node.cases) == 2)
+        for idx, case in enumerate(menu_node.cases):
+            self.assertTrue(case.label == menu["choice"][idx]["txt"])
+            self.assertTrue(isinstance(case.block, list))
+            self.assertTrue(case.block[0].name == menu["choice"][idx]["jmp"])
+    def _except_menu_token(self, menu:dict, token:str):
+        except_done = False
+        try:
+            graphic_novel.parser_dialog._parse_menu("dump", menu)
+        except graphic_novel.parser_dialog.ParseExcept as parse_exept:
+            self.assertTrue(parse_exept.what == f"{token} miss")
+            self.assertTrue(parse_exept.label == "dump")
+            except_done = True
+        self.assertTrue(except_done)
+    def _except_empty_choice(self, menu:dict):
+        except_done = False
+        try:
+            graphic_novel.parser_dialog._parse_menu("dump", menu)
+        except graphic_novel.parser_dialog.ParseExcept as parse_exept:
+            self.assertTrue(parse_exept.what == "empty menu")
+            self.assertTrue(parse_exept.label == "dump")
+            except_done = True
+        self.assertTrue(except_done)
+    def test_except_menu(self):
+        menu = {"menu":"regular"}
+        self._except_menu_token(menu,
+                                graphic_novel.parser_dialog.CHOICE_TOKEN)
+        menu["choice"] = []
+        self._except_empty_choice(menu)
+        menu["choice"] = [{"jmp":"label"}]
+        self._except_menu_token(menu,
+                                graphic_novel.parser_dialog.TXT_MENU_TOKEN)
+        menu["choice"] = [{"txt":"label"}]
+        self._except_menu_token(menu,
+                                graphic_novel.parser_dialog.JMP_MENU_TOKEN)
+        
 
 if __name__ == "__main__":
     unittest.main()

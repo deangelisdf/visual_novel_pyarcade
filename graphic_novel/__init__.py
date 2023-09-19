@@ -245,7 +245,7 @@ class GraphicNovel(arcade.View):
             self._skip_dlg = False
             for case in node_dlg.cases:
                 button = UIFlatButton(text=case.label, width=200)
-                self.__jump_next[case.label] = case.block.name
+                self.__jump_next[case.label] = case.block[0].name
                 self.v_box.add(button.with_space_around(bottom=1))
                 button.on_click = self.__jump_next_dialog
                 self.v_box.add(button)

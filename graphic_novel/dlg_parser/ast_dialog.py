@@ -3,6 +3,8 @@ used to develop the classes to rapresent the Dialog Tree
 in all possible nodes.
 author: Domenico Francesco De Angelis
 """
+from typing import List, Dict, Union
+
 class Node:
     """Abstract base class for AST nodes."""
     __slots__ = ('inner', )
@@ -24,7 +26,7 @@ class RootDialog(Node):
     def __init__(self, file_name:str, blocks:list):
         super().__init__()
         self.file_name = file_name
-        self.blocks = {i.label:i for i in blocks}
+        self.blocks:Dict[BlockInstr] = {i.label:i for i in blocks}
     def children(self):
         return ("blocks", self.blocks)
     def __iter__(self):
@@ -34,9 +36,9 @@ class Dialog(Node):
     __slots__ = ('char_name', 'text', 'action', '__weakref__')
     def __init__(self, char_name:str, text:str, action:str):
         super().__init__()
-        self.char_name = char_name
-        self.text = text
-        self.action = action
+        self.char_name:str = char_name
+        self.text:str = text
+        self.action:List[str] = action
     def children(self):
         return (("char_name", self.char_name), ("text", self.text))
     def __iter__(self):
@@ -47,7 +49,7 @@ class PythonExp(Node):
     __slots__ = ('expr', '__weakref__')
     def __init__(self, expr:str):
         super().__init__()
-        self.expr = expr
+        self.expr:str = expr
     def children(self):
         return ("expr", self.expr)
     def __iter__(self):
@@ -57,8 +59,8 @@ class BlockInstr(Node):
     __slots__ = ('label', 'block', '__weakref__')
     def __init__(self, label:str, block:list):
         super().__init__()
-        self.label = label
-        self.block = block
+        self.label:str = label
+        self.block:List[Union[Dialog, Menu, PythonExp, Jump]] = block
     def children(self):
         nodelist = [("label", self.label)]
         if self.block is not None:
@@ -94,10 +96,11 @@ class If(Node):
             yield self.iffalse
     attr_names = ()
 class Menu(Node):
-    __slots__ = ('cases', '__weakref__')
+    __slots__ = ('cases', 'type_menu', '__weakref__')
     def __init__(self):
         super().__init__()
-        self.cases:BlockInstr = []
+        self.type_menu:str = ""
+        self.cases:List[BlockInstr] = []
     def children(self):
         return ("cases", self.cases)
     def __iter__(self):
@@ -107,55 +110,12 @@ class Jump(Node):
     __slots__ = ('name', '__weakref__')
     def __init__(self, name):
         super().__init__()
-        self.name = name
+        self.name:str = name
     def children(self):
         return ("name", self.name)
     def __iter__(self):
         return
         yield
     attr_names = ('name', )
-class Show(Node):
-    __slots__ = ('scene', '__weakref__')
-    def __init__(self, scene:str):
-        super().__init__()
-        self.scene = scene
-    def children(self):
-        return tuple("scene", self.scene)
-    def __iter__(self):
-        yield self.scene
-    attr_names = ()
-
-KEYWORDS = [
-    '$',
-    'jump',
-    'menu',
-    'if',
-    'show',
-    'as',
-    'at',
-    'behind',
-    'call',
-    'expression',
-    'hide',
-    'in',
-    'image',
-    'init',
-    'onlayer',
-    'return',
-    'scene',
-    'with',
-    'while',
-    'zorder',
-    'transform',
-    ]
-
-KEYWORDS_AST = {
-    KEYWORDS[0]: PythonExp,
-    KEYWORDS[1]: Jump,
-    KEYWORDS[2]: Menu,
-    KEYWORDS[3]: If,
-    KEYWORDS[4]: Show
-}
-
 
 __author__ = "dfdeangelis"
