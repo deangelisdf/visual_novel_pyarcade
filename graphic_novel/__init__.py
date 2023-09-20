@@ -14,8 +14,7 @@ from graphic_novel.dlg_parser import parser_dialog
 from graphic_novel.dlg_parser import ast_dialog
 import graphic_novel.constants as constants
 import graphic_novel.actions as actions
-
-INPUT_CHECK_DEFAULT = {"check":False, "type":"text", "evt":""}
+from graphic_novel import layout_commands
 
 class UITypingTextArea(UITextArea):
     """UI TextArea specialized in a typing animation"""
@@ -51,6 +50,23 @@ class UITypingTextArea(UITextArea):
                 self.__last_delay_typing += dt
         return super().on_update(dt)
 
+class InputHandler:
+    def __init__(self):
+        self.command_layout:Dict[int, layout_commands.layout_command] = {
+            arcade.key.ENTER: layout_commands.next_dlg_command(),
+            arcade.key.TAB:   layout_commands.skip_dlg_command()
+        }
+    def change_key(self, name_action:str, new_key:int):
+        """brief: must be used to change the command layout"""
+        old_key = None
+        for key, cmd in self.command_layout.items():
+            if cmd.name == name_action:
+                old_key = key
+                break
+        if old_key is None:
+            raise NotImplementedError(f"{name_action} is no command in our layout")
+        self.command_layout[new_key] = self.command_layout.pop(old_key)
+
 class GraphicNovel(arcade.View):
     """This View is used to implement
     the essential graphic novel"""
@@ -78,7 +94,7 @@ class GraphicNovel(arcade.View):
         self.__dict_char: Dict[str, arcade.Sprite] = {}
         
         self.__events: Dict[str, Callable[['GraphicNovel'], int]] = {}
-        self.input_text_check = INPUT_CHECK_DEFAULT.copy()
+        self.input_text_check = constants.INPUT_CHECK_DEFAULT.copy()
         self.__dialog_end:bool = False
         self.__filter_video:list = []
         
@@ -90,11 +106,12 @@ class GraphicNovel(arcade.View):
             constants.SHAKE_TOKEN:   actions.ShakeAction(self),
             constants.RESTART_TOKEN: actions.RestartAction(self),
             constants.SET_BG_TOKEN:  actions.SetBackground(self) }
+        self.input_handler = InputHandler()
 
     def on_ended(self, context: 'GraphicNovel'):
         """This method represent the END of dialog"""
         pass
-
+    
     def add_event(self, name_event: str,
                   event: Callable[['GraphicNovel'], int]) -> None:
         """Add event to active in dialog json"""
@@ -130,15 +147,15 @@ class GraphicNovel(arcade.View):
                 char.scale = 0.5
             elif char.height >= self.window.height/3:
                 char.scale = 0.5
-        
+
     def setup(self, path_dialog: str) -> None:
         """ Set up the game and initialize the variables. """
         self.manager.enable()
         self.left_side_screen.clear()
         self.right_side_screen.clear()
         self.history_labels.clear()
-        self.__not_skippable = True
-        self.input_text_check = INPUT_CHECK_DEFAULT.copy()
+        self._not_skippable = True
+        self.input_text_check = constants.INPUT_CHECK_DEFAULT.copy()
         arcade.set_background_color(arcade.color.AFRICAN_VIOLET)
         height_25perc  = (self.window.height * 25)/100
         self.text_area = UITypingTextArea(
@@ -158,7 +175,7 @@ class GraphicNovel(arcade.View):
         path_dialog = arcade.resources.resolve_resource_path(path_dialog)
         self.setup_dialog(path_dialog)
         self.set_color_text(constants.DEFAULT_COLOR_TEXT)
-        self.__next_step()
+        self._next_step()
 
     def set_color_text(self, color: arcade.RGBA):
         self.text_area.doc.set_style(0, 12,
@@ -209,7 +226,7 @@ class GraphicNovel(arcade.View):
         self.history_labels.append(label)
         self.ptr_blocks = iter(self.dialog.blocks[label].block)
         self.v_box.clear()
-        self.__next_step()
+        self._next_step()
     def __jump_next_dialog(self, event: UIOnClickEvent) -> None:
         jmp_label = self.__jump_next[event.source.text]
         self.jmp_next_dialog(jmp_label)
@@ -246,11 +263,13 @@ class GraphicNovel(arcade.View):
     def __generate_request(self, req_node:ast_dialog.Request) -> None:
         self.box_dlg.remove(self.text_area)
         self.box_dlg.add(self.input_text)
+        self._not_skippable = False
+        self._skip_dlg      = False
         self.input_text_check["check"] = True
         self.input_text_check["evt"]   = req_node.event_name
         self.input_text_check["type"]  = req_node.type_request
 
-    def __next_step(self) -> None:
+    def _next_step(self) -> None:
         try:
             node_dlg = next(self.ptr_blocks)
         except StopIteration:
@@ -282,25 +301,13 @@ class GraphicNovel(arcade.View):
         if self._skip_time<=constants.SKIP_TIME:
             self._skip_time += delta_time
         elif self._skip_dlg:
-            self.__next_step()
+            self._next_step()
             self._skip_time = 0.0
         return super().update(delta_time)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
-        if symbol == arcade.key.TAB and self.__not_skippable:
-            self._skip_dlg = not self._skip_dlg
-        elif symbol == arcade.key.ENTER:
-            if self.input_text_check["check"]:
-                if self.input_text_check["type"] == "int":
-                    try:
-                        int(self.input_text.text, 10)
-                    except ValueError:
-                        self.input_text.text = "0"
-                self.__events[self.input_text_check["evt"]](self)
-                self.input_text_check = INPUT_CHECK_DEFAULT.copy()
-                self.input_text.text  = "" 
-                self.box_dlg.remove(self.input_text)
-                self.box_dlg.add(self.text_area)
-            self.__next_step()
+        if symbol not in self.input_handler.command_layout:
+            return
+        self.input_handler.command_layout[symbol](self)
 
 __author__ = "dfdeangelis"

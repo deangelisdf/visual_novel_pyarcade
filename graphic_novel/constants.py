@@ -3,6 +3,7 @@ DELAY_WRITING_TIME = 0.2
 
 INIT_BLOCK = "init"
 
+INPUT_CHECK_DEFAULT= {"check":False, "type":"text", "evt":""}
 DEFAULT_COLOR_TEXT = (0,0,0,255)
 
 MOVE_ACTION_TOKEN = "move"
@@ -14,5 +15,8 @@ SHAKE_TOKEN   = "shake"
 JUMP_TOKEN    = "jmp"
 RESTART_TOKEN = "restart"
 SET_BG_TOKEN  = "bg"
+
+SKIP_DLG_KEY = 0
+NEXT_DLG_KEY = 1
 
 __author__ = "dfdeangelis"
