@@ -1,10 +1,13 @@
-# graphic_novel_pyarcade
-Little framework to create a graphic novel with python arcade https://github.com/pythonarcade/arcade
+# visual_novel_pyarcade
+Little framework to create a visual novel with python arcade https://github.com/pythonarcade/arcade
 ##
 # Feature
  - character managment
  - event managment
  - dialog based on json format
+
+## how to install?
+pip install graphic_novel_pyarcade
 
 ##
 # How to use
