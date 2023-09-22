@@ -35,3 +35,12 @@ class skip_dlg_command(layout_command):
     def __call__(self, machine) -> None: # noqa: F821
         if machine._not_skippable:
             machine._skip_dlg = not machine._skip_dlg
+
+class hide_gui_command(layout_command):
+    """Hide gui"""
+    def __init__(self):
+        self.name = self.__doc__
+    def __call__(self, machine) -> None:
+        machine.hide_gui = not machine.hide_gui
+
+__author__ = "dfdeangelis"

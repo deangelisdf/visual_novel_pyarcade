@@ -54,7 +54,8 @@ class InputHandler:
     def __init__(self):
         self.command_layout:Dict[int, layout_commands.layout_command] = {
             arcade.key.ENTER: layout_commands.next_dlg_command(),
-            arcade.key.TAB:   layout_commands.skip_dlg_command()
+            arcade.key.TAB:   layout_commands.skip_dlg_command(),
+            arcade.key.H:     layout_commands.hide_gui_command()
         }
     def change_key(self, name_action:str, new_key:int):
         """brief: must be used to change the command layout"""
@@ -87,6 +88,7 @@ class GraphicNovel(arcade.View):
         self.input_text: UIInputText= None
         self.v_box   = UIBoxLayout() #container button for menu
         self.box_dlg = UIBoxLayout()
+        self.hide_gui:bool = False
 
         self.background_texture: arcade.Texture = None
         self.left_side_screen:List[arcade.Sprite]  = []
@@ -217,7 +219,8 @@ class GraphicNovel(arcade.View):
             sprite_right.bottom = self.box_dlg.top
             sprite_right.right  = self.window.width - 10 - idx*5
             sprite_right.draw()
-        self.manager.draw()
+        if not self.hide_gui:
+            self.manager.draw()
         if self._skip_dlg:
             arcade.draw_text("SKIPPING", 1, 1, font_size=15)
     def jmp_next_dialog(self, label:str)->None:
