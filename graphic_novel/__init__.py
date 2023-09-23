@@ -14,7 +14,8 @@ from graphic_novel.dlg_parser import parser_dialog
 from graphic_novel.dlg_parser import ast_dialog
 import graphic_novel.constants as constants
 import graphic_novel.actions as actions
-from graphic_novel import layout_commands
+from graphic_novel import input_handler
+from graphic_novel.character_vn import CharacterVN
 
 class UITypingTextArea(UITextArea):
     """UI TextArea specialized in a typing animation"""
@@ -27,10 +28,18 @@ class UITypingTextArea(UITextArea):
                          multiline, scroll_speed, size_hint, size_hint_min,
                          size_hint_max, style, **kwargs)
         self.__text_to_write:str = ""
-        self.delay_typing = constants.DELAY_WRITING_TIME
+        self.__delay_typing = constants.DELAY_WRITING_TIME
         self.__last_delay_typing:float = 0.0
         self.instant_write = False
         self.counter_char:int = 0
+    @property
+    def delay_typing(self):
+        return self.__delay_typing
+    @delay_typing.setter
+    def delay_typing(self, x:float):
+        if x == 0:
+            self.instant_write = True
+        self.__delay_typing = x
     def set_text(self, text: str) -> None:
         if self.instant_write:
             self.text = text
@@ -42,31 +51,13 @@ class UITypingTextArea(UITextArea):
         self.__last_delay_typing = 0.0
     def on_update(self, dt:float) -> None:
         if self.counter_char < len(self.__text_to_write):
-            if self.__last_delay_typing >= self.delay_typing:
+            if self.__last_delay_typing >= self.__delay_typing:
                 self.__last_delay_typing = 0.0
                 self.counter_char += 1
                 self.text = str(self.__text_to_write[:self.counter_char])
             else:
                 self.__last_delay_typing += dt
         return super().on_update(dt)
-
-class InputHandler:
-    def __init__(self):
-        self.command_layout:Dict[int, layout_commands.layout_command] = {
-            arcade.key.ENTER: layout_commands.next_dlg_command(),
-            arcade.key.TAB:   layout_commands.skip_dlg_command(),
-            arcade.key.H:     layout_commands.hide_gui_command()
-        }
-    def change_key(self, name_action:str, new_key:int):
-        """brief: must be used to change the command layout"""
-        old_key = None
-        for key, cmd in self.command_layout.items():
-            if cmd.name == name_action:
-                old_key = key
-                break
-        if old_key is None:
-            raise NotImplementedError(f"{name_action} is no command in our layout")
-        self.command_layout[new_key] = self.command_layout.pop(old_key)
 
 class GraphicNovel(arcade.View):
     """This View is used to implement
@@ -91,10 +82,9 @@ class GraphicNovel(arcade.View):
         self.hide_gui:bool = False
 
         self.background_texture: arcade.Texture = None
-        self.left_side_screen:List[arcade.Sprite]  = []
-        self.right_side_screen:List[arcade.Sprite] = []
-        self.__dict_char:Dict[str,
-                              Dict[str,arcade.Sprite]] = {}
+        self.left_side_screen:List[CharacterVN]  = []
+        self.right_side_screen:List[CharacterVN] = []
+        self.__dict_char:Dict[str, CharacterVN] = {}
         
         self.__events: Dict[str, Callable[['GraphicNovel'], int]] = {}
         self.input_text_check = constants.INPUT_CHECK_DEFAULT.copy()
@@ -103,13 +93,14 @@ class GraphicNovel(arcade.View):
         
         self.__strategy_action = {
             constants.MOVE_ACTION_TOKEN: actions.MoveAction(self),
-            constants.ALPHA_TOKEN:   actions.SetAlphaAction(self),
-            constants.EVENT_TOKEN:   actions.EventAction(self),
-            constants.JUMP_TOKEN:    actions.JmpAction(self),
-            constants.SHAKE_TOKEN:   actions.ShakeAction(self),
-            constants.RESTART_TOKEN: actions.RestartAction(self),
-            constants.SET_BG_TOKEN:  actions.SetBackground(self) }
-        self.input_handler = InputHandler()
+            constants.ALPHA_TOKEN:       actions.SetAlphaAction(self),
+            constants.EVENT_TOKEN:       actions.EventAction(self),
+            constants.JUMP_TOKEN:        actions.JmpAction(self),
+            constants.SHAKE_TOKEN:       actions.ShakeAction(self),
+            constants.RESTART_TOKEN:     actions.RestartAction(self),
+            constants.SET_BG_TOKEN:      actions.SetBackground(self),
+            constants.SET_SPRITE_TOKEN:  actions.ChangeCharSprite(self) }
+        self.input_handler = input_handler.InputHandler()
 
     def on_ended(self, context: 'GraphicNovel'):
         """This method represent the END of dialog"""
@@ -153,17 +144,18 @@ class GraphicNovel(arcade.View):
         width = self.window.width //3
         height= self.window.height//3
         for name_char, char in dict_char.items():
-            rebuild_char = {}
+            state = "idle"
             if isinstance(char, arcade.Sprite):
                 __redim_sprite(width, height, char)
-                rebuild_char["idle"]=char
-                rebuild_char[constants.CHAR_SELECTED_KEY]="idle"
+                char = {state:char}
             elif isinstance(char, dict):
-                rebuild_char[constants.CHAR_SELECTED_KEY]=list(char.keys())[0]
+                state = list(char.keys())[0]
                 for state, sprite in char.items():
                     __redim_sprite(width, height, sprite)
-                    rebuild_char[state] = sprite
-            self.__dict_char[name_char] = rebuild_char
+            cvn = CharacterVN(name_char)
+            cvn.sprites = char
+            cvn.state = state
+            self.__dict_char[name_char] = cvn
 
     def setup(self, path_dialog: str) -> None:
         """ Set up the game and initialize the variables. """
@@ -244,19 +236,18 @@ class GraphicNovel(arcade.View):
         self.history_labels.append(label)
         self.ptr_blocks = iter(self.dialog.blocks[label].block)
         self.v_box.clear()
-        self._next_step()
     def __jump_next_dialog(self, event: UIOnClickEvent) -> None:
         jmp_label = self.__jump_next[event.source.text]
         self.jmp_next_dialog(jmp_label)
+        self._next_step()
 
-    def _remove_pg_from_lists(self, sprite:arcade.Sprite) -> None:
+    def _remove_pg_from_lists(self, sprite: CharacterVN) -> None:
         if sprite in self.left_side_screen:
             self.left_side_screen.remove(sprite)
         elif sprite in self.right_side_screen:
             self.right_side_screen.remove(sprite)
 
-    def __interpreting_action(self, sprite:Dict[str,arcade.Sprite],
-                               tok:List[str]) -> None:
+    def __interpreting_action(self, sprite:CharacterVN, tok:List[str]) -> None:
         """Actions are defined with 2 words, action and argument"""
         assert len(tok) == 2
         assert tok[0] in self.__strategy_action

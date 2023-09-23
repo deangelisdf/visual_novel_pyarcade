@@ -10,9 +10,9 @@ class layout_command:
     def __init__(self):
         self.name = "<N/A>"
 class next_dlg_command(layout_command):
-    def __init__(self):
-        self.name = "Next Dialog"
     """Next Dialog"""
+    def __init__(self):
+        self.name = self.__doc__
     def __call__(self, machine) -> None: # noqa: F821
         if machine.input_text_check["check"]:
             if machine.input_text_check["type"] == "int":
@@ -31,7 +31,7 @@ class next_dlg_command(layout_command):
 class skip_dlg_command(layout_command):
     """Skip dialogs"""
     def __init__(self):
-        self.name = "Skip dialog"
+        self.name = self.__doc__
     def __call__(self, machine) -> None: # noqa: F821
         if machine._not_skippable:
             machine._skip_dlg = not machine._skip_dlg

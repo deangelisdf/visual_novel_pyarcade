@@ -76,10 +76,10 @@ class actions_testing(unittest.TestCase):
     def test_alpha(self):
         except_ve = False
         alpha = actions.SetAlphaAction(gn_view)
-        alpha(dict_char["Me"], "50")
+        alpha(gn_view.characters["Me"], "50")
         self.assertTrue(dict_char["Me"].alpha == 50)
         try:
-            alpha(dict_char["Me"], "asdf")
+            alpha(None, "asdf")
         except ValueError:
             except_ve = True
         self.assertTrue(except_ve)

@@ -1,0 +1,52 @@
+{
+    "init":{
+        "block":[
+            ["Emma", "Hi!", "move left", "face idle", "bg :resources:images/backgrounds/abstract_2.jpg"],
+            ["Emma", "I'm here to show some features.\nSo, let's go!", "face happy"],
+            ["Emma", "I want to start with a question.\nDo you like dialog tree?", "face idle"],
+            ["ME", {"menu":"regular", "choice":[
+                        {"txt":"Yes, obvious!", "jmp":"yes"},
+                        {"txt":"I'm not sure", "jmp":"meh"},
+                        {"txt":"No!", "jmp":"no"}
+                    ]}]
+        ]
+    },
+    "yes":{
+        "block":[
+            ["Emma", "I'm so exaited about that", "face happy"],
+            ["", "", "jmp question2"]
+        ]
+    },
+    "meh":{
+        "block":[
+            ["Emma", "mmmhhh...", "alpha 100"],
+            ["Emma", "you don't seem really enthusiastic about it...", "alpha 50"],
+            ["", "", "jmp question2"]
+        ]
+    },
+    "no":{
+        "block":[
+            ["Emma", "How dare you?!"],
+            ["Emma", "Ok, ok, can happen sometimes.\nGo to next question."],
+            ["", "", "jmp question2"]
+        ]
+    },
+    "question2":{
+        "block":[["Emma", "what is the result of the sum 5+5?", "alpha 255"],
+                 ["ME", {"request":"int", "event": "quest_ev"}]
+                ]
+    },
+    "ok_resp":{
+        "block":[["Emma", "Great job!", "face happy"], ["", "", "jmp end"]]
+    },
+    "bad_resp":{
+        "block":[["Emma", "...\nHow it is possible?"], ["", "", "jmp end"]]
+    },
+    "end":{
+        "block":[["","","restart all"],
+                 ["ME", {"menu":"regular", "choice":[
+                    {"txt":"restart", "jmp":"init"},
+                    {"txt":"No", "jmp":"end"}]}]
+                ]
+    }
+}
