@@ -4,7 +4,7 @@ import sys
 import os
 import unittest
 from unittest import mock
-from arcade.application import _window
+import arcade.application
 
 src_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, src_path)
@@ -41,8 +41,7 @@ def get_dummy_shader_program():
 
     return _get_dummy_shader_program
 
-global _window
-_window = get_dummy_shader_program()
+arcade.application._window = get_dummy_shader_program()
 gn_view = graphic_novel.GraphicNovel()
 class gn_testing(unittest.TestCase):
     def test_jmp_next_dialog(self):
