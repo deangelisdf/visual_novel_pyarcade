@@ -5,7 +5,7 @@ with those actions, defined in dialog tree
 
 author: Domenico Francesco De Angelis
 """
-from typing import Dict, Union
+from typing import Dict
 import arcade
 import graphic_novel.constants as constants
 
