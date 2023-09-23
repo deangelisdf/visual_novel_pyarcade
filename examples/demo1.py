@@ -1,7 +1,6 @@
 import os
 import sys
 import arcade
-from pyglet.math import Vec2
 src_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, src_path)
 import graphic_novel # noqa: E402
@@ -11,7 +10,7 @@ SCREEN_HEIGHT = 600
 SCREEN_TITLE = "Graphic Novel Example"
 
 PATH_C1_NORMAL=":resources:images/animated_characters/female_adventurer/femaleAdventurer_idle.png"
-PATH_C1_HAPPY =":resources:images/animated_characters/female_adventurer/femaleAdventurer_jump.png"
+PATH_C1_HAPPY=":resources:images/animated_characters/female_adventurer/femaleAdventurer_jump.png"
 
 def end_game(context: graphic_novel.GraphicNovel):
     """function used at the end of dialog"""
