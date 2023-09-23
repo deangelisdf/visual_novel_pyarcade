@@ -1,13 +1,10 @@
 # visual_novel_pyarcade
-Little framework to create a visual novel with python arcade https://github.com/pythonarcade/arcade
+👨‍💻 Visual novel with python arcade https://github.com/pythonarcade/arcade
 ##
 # Feature
  - character managment
  - event managment
- - dialog based on json format
-
-## how to install?
-pip install graphic_novel_pyarcade
+ - dialog-tree based on json format
 
 ##
 # How to use
@@ -18,6 +15,13 @@ Steps:
 4. Set the new view and use it
 
 Please look also the emample/simple_example.py
+
+##
+# How to use View (user guide)
+By default the keyboard layout is configured in followed way:
+ENTER: Next Dialog
+TAB: Skip dialog (until menu or opened answer)
+H: hide gui (If skip active the messages keep going)
 
 ## How make a dialog
 The objective of this framework is to achieve it as simple task.
