@@ -150,7 +150,7 @@ class GraphicNovel(arcade.View):
                 char = {state:char}
             elif isinstance(char, dict):
                 state = list(char.keys())[0]
-                for state, sprite in char.items():
+                for sprite in char.values():
                     __redim_sprite(width, height, sprite)
             cvn = CharacterVN(name_char)
             cvn.sprites = char
@@ -253,12 +253,12 @@ class GraphicNovel(arcade.View):
         assert tok[0] in self.__strategy_action
         self.__strategy_action[tok[0]](sprite, tok[1])
 
-    def __action_video(self, name_pg:str, actions:List[str]) -> None:
+    def __action_video(self, name_pg:str, actions_char:List[str]) -> None:
         if name_pg not in self.__dict_char:
             sprite = None
         else:
             sprite = self.__dict_char[name_pg]
-        for action in actions:
+        for action in actions_char:
             tok = action.split()
             self.__interpreting_action(sprite, tok)
 

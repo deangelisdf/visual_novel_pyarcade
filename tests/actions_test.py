@@ -76,6 +76,7 @@ class actions_testing(unittest.TestCase):
     def test_alpha(self):
         except_ve = False
         alpha = actions.SetAlphaAction(gn_view)
+        gn_view.characters = dict_char
         alpha(gn_view.characters["Me"], "50")
         self.assertTrue(dict_char["Me"].alpha == 50)
         try:
@@ -113,6 +114,15 @@ class actions_testing(unittest.TestCase):
         setbg(None, ":resources:images/backgrounds/abstract_1.jpg")
         self.assertFalse(gn_view.background_texture is None)
         self.assertTrue(isinstance(gn_view.background_texture, arcade.Texture))
+    @unittest.skipIf(IN_GITHUB_ACTIONS, "No screen")
+    def test_ChangeCharSprite(self):
+        cs = actions.ChangeCharSprite(gn_view)
+        dict_char2 = {"Me":{"a":arcade.Sprite(texture=texture),
+                            "b":arcade.Sprite(texture=texture)}}
+        gn_view.characters = dict_char2
+        cs(gn_view.characters["Me"], "b")
+        print(gn_view.characters["Me"].state)
+        self.assertTrue(gn_view.characters["Me"].state == "b")
 
 if __name__ == "__main__":
     unittest.main()

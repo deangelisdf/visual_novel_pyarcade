@@ -45,16 +45,6 @@ class Dialog(Node):
         yield self.char_name
         yield self.text
     attr_names = ()
-class PythonExp(Node):
-    __slots__ = ('expr', '__weakref__')
-    def __init__(self, expr:str):
-        super().__init__()
-        self.expr:str = expr
-    def children(self):
-        return ("expr", self.expr)
-    def __iter__(self):
-        yield self.expr
-    attr_names = ()
 class BlockInstr(Node):
     __slots__ = ('label', 'block', '__weakref__')
     def __init__(self, label:str, block:list):
@@ -70,30 +60,6 @@ class BlockInstr(Node):
         yield self.label
         if self.block is not None:
             yield self.block
-    attr_names = ()
-class If(Node):
-    __slots__ = ('cond', 'iftrue', 'iffalse', '__weakref__')
-    def __init__(self, cond, iftrue, iffalse):
-        super().__init__()
-        self.cond = cond
-        self.iftrue = iftrue
-        self.iffalse = iffalse
-    def children(self):
-        nodelist = []
-        if self.cond is not None:
-            nodelist.append(("cond", self.cond))
-        if self.iftrue is not None:
-            nodelist.append(("iftrue", self.iftrue))
-        if self.iffalse is not None:
-            nodelist.append(("iffalse", self.iffalse))
-        return tuple(nodelist)
-    def __iter__(self):
-        if self.cond is not None:
-            yield self.cond
-        if self.iftrue is not None:
-            yield self.iftrue
-        if self.iffalse is not None:
-            yield self.iffalse
     attr_names = ()
 class Menu(Node):
     __slots__ = ('cases', 'type_menu', '__weakref__')

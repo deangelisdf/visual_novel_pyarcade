@@ -17,8 +17,9 @@ class CharacterVN:
     def state(self, x:str):
         if x not in self.sprites.keys():
             return
-        self.sprites[x].center_y = self.sprites[self.__state].center_y
-        self.sprites[x].center_x = self.sprites[self.__state].center_x
+        if self.__state in self.sprites.keys():
+            self.sprites[x].center_y = self.sprites[self.__state].center_y
+            self.sprites[x].center_x = self.sprites[self.__state].center_x
         self.__state = x   
     def draw(self):
         self.sprites[self.state].draw()
