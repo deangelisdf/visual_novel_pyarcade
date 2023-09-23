@@ -50,7 +50,7 @@ class BlockInstr(Node):
     def __init__(self, label:str, block:list):
         super().__init__()
         self.label:str = label
-        self.block:List[Union[Dialog, Menu, PythonExp, Jump]] = block
+        self.block:List[Union[Dialog, Menu, Jump]] = block
     def children(self):
         nodelist = [("label", self.label)]
         if self.block is not None:
