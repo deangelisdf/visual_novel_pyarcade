@@ -16,6 +16,9 @@ Steps:
 
 Please look also the emample/simple_example.py
 
+## How to install
+pip install graphic-novel-pyarcade
+
 ##
 # How to use View (user guide)
 By default the keyboard layout is configured in followed way:
