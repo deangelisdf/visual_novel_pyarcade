@@ -3,6 +3,8 @@ DELAY_WRITING_TIME = 0.2
 
 INIT_BLOCK = "init"
 
+CHAR_SELECTED_KEY = "selected"
+
 INPUT_CHECK_DEFAULT= {"check":False, "type":"text", "evt":""}
 DEFAULT_COLOR_TEXT = (0,0,0,255)
 

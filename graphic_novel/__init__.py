@@ -76,7 +76,7 @@ class GraphicNovel(arcade.View):
         # Call the parent class initializer
         super().__init__()
         self._skip_dlg  = False
-        self.__not_skippable = True
+        self._not_skippable = True
         self._skip_time = 0.0
         self.manager = UIManager()
         self.dialog:ast_dialog.Node = None
@@ -93,7 +93,8 @@ class GraphicNovel(arcade.View):
         self.background_texture: arcade.Texture = None
         self.left_side_screen:List[arcade.Sprite]  = []
         self.right_side_screen:List[arcade.Sprite] = []
-        self.__dict_char: Dict[str, arcade.Sprite] = {}
+        self.__dict_char:Dict[str,
+                              Dict[str,arcade.Sprite]] = {}
         
         self.__events: Dict[str, Callable[['GraphicNovel'], int]] = {}
         self.input_text_check = constants.INPUT_CHECK_DEFAULT.copy()
@@ -136,19 +137,33 @@ class GraphicNovel(arcade.View):
     def ended(self) -> bool:
         return self.__dialog_end
     @property
-    def characters(self) -> Dict[str, arcade.Sprite]:
+    def characters(self) -> Dict[str, Dict[str,arcade.Sprite]]:
         """Characters used in dialogs
         NAME: SPRITE"""
         return self.__dict_char
 
     @characters.setter
     def characters(self, dict_char: Dict[str, arcade.Sprite]) -> None:
-        self.__dict_char = dict_char
-        for char in self.__dict_char.values():
-            if char.width >= self.window.width/3:
-                char.scale = 0.5
-            elif char.height >= self.window.height/3:
-                char.scale = 0.5
+        def __redim_sprite(w:int, h:int, spr:arcade.Sprite) -> None:
+            if spr.width >= w:
+                spr.scale = 0.5
+            elif spr.height >= h:
+                spr.scale = 0.5
+        self.__dict_char = {}
+        width = self.window.width //3
+        height= self.window.height//3
+        for name_char, char in dict_char.items():
+            rebuild_char = {}
+            if isinstance(char, arcade.Sprite):
+                __redim_sprite(width, height, char)
+                rebuild_char["idle"]=char
+                rebuild_char[constants.CHAR_SELECTED_KEY]="idle"
+            elif isinstance(char, dict):
+                rebuild_char[constants.CHAR_SELECTED_KEY]=list(char.keys())[0]
+                for state, sprite in char.items():
+                    __redim_sprite(width, height, sprite)
+                    rebuild_char[state] = sprite
+            self.__dict_char[name_char] = rebuild_char
 
     def setup(self, path_dialog: str) -> None:
         """ Set up the game and initialize the variables. """
@@ -240,7 +255,8 @@ class GraphicNovel(arcade.View):
         elif sprite in self.right_side_screen:
             self.right_side_screen.remove(sprite)
 
-    def __interpreting_action(self, sprite:arcade.Sprite, tok:List[str]) -> None:
+    def __interpreting_action(self, sprite:Dict[str,arcade.Sprite],
+                               tok:List[str]) -> None:
         """Actions are defined with 2 words, action and argument"""
         assert len(tok) == 2
         assert tok[0] in self.__strategy_action
@@ -276,25 +292,25 @@ class GraphicNovel(arcade.View):
         try:
             node_dlg = next(self.ptr_blocks)
         except StopIteration:
-            self.__not_skippable = False
+            self._not_skippable = False
             self.__dialog_end = True
             self.on_ended(self)
             return
-        self.__not_skippable = True
+        self._not_skippable = True
         if isinstance(node_dlg, ast_dialog.Dialog):
             self.title_area.text= node_dlg.char_name
             self.text_area.set_text(node_dlg.text)
             self.__action_video(node_dlg.char_name, node_dlg.action)
         elif isinstance(node_dlg, ast_dialog.Menu):
             self._skip_dlg = False
-            self.__not_skippable = False
+            self._not_skippable = False
             if node_dlg.type_menu != "regular":
                 raise NotImplementedError(
                     f"{node_dlg.type_menu} menu is not implemented")
             self.__generate_regular_menu(node_dlg.cases)
         elif isinstance(node_dlg, ast_dialog.Request):
             self._skip_dlg = False
-            self.__not_skippable = False
+            self._not_skippable = False
             if node_dlg.type_request not in ["text", "int"]:
                 raise NotImplementedError(
                     f"{node_dlg.type_request} request is not implemented")
