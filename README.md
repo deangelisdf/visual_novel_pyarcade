@@ -19,8 +19,11 @@ Please look also the emample/simple_example.py
 ##
 # How to use View (user guide)
 By default the keyboard layout is configured in followed way:
+
 ENTER: Next Dialog
+
 TAB: Skip dialog (until menu or opened answer)
+
 H: hide gui (If skip active the messages keep going)
 
 ## How make a dialog
