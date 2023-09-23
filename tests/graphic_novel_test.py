@@ -41,7 +41,7 @@ def get_dummy_shader_program():
 
     return _get_dummy_shader_program
 
-arcade.application._window = get_dummy_shader_program()
+arcade.get_window = get_dummy_shader_program()
 gn_view = graphic_novel.GraphicNovel()
 class gn_testing(unittest.TestCase):
     def test_jmp_next_dialog(self):
