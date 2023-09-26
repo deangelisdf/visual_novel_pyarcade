@@ -16,7 +16,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="graphic_novel_pyarcade",
-    version="0.1.0",  # Required
+    version="0.2.0",  # Required
     description="Little framework to create a graphic novel with python arcade",
     long_description=long_description,
     long_description_content_type="text/markdown",

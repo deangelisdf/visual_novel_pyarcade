@@ -9,3 +9,5 @@ def get_window_dummy(w: int, h: int):
     def _get_dummy_shader_program(*args, **kwargs):
         return mock.MagicMock(width=w, height=h)
     return _get_dummy_shader_program
+
+__author__ "dfdeangelis"
