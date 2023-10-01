@@ -5,7 +5,7 @@ in "graphic novel" way
 
 author: Domenico Francesco De Angelis
 """
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Any
 import arcade
 from arcade.gui import UIManager, UIBoxLayout, UIAnchorWidget
 from arcade.gui import UIFlatButton, UIOnClickEvent
@@ -90,6 +90,8 @@ class GraphicNovel(arcade.View):
         self.input_text_check = constants.INPUT_CHECK_DEFAULT.copy()
         self.__dialog_end:bool = False
         self.__filter_video:list = []
+
+        self.variables:Dict[str, Any] = {}
         
         self.__strategy_action = {
             constants.MOVE_ACTION_TOKEN: actions.MoveAction(self),
@@ -103,7 +105,9 @@ class GraphicNovel(arcade.View):
         self.input_handler = input_handler.InputHandler()
 
     def on_ended(self, context: 'GraphicNovel'):
-        """This method represent the END of dialog"""
+        """This method represent the END of dialog
+        SHALL BE REDEFINED TO HAVE AN USABLE END DIALOG
+        OTHERWISE THE DIALOG COMPLETE WITH THE LAST SENTENCE IN THE TREE"""
         pass
     
     def add_event(self, name_event: str,
@@ -116,12 +120,15 @@ class GraphicNovel(arcade.View):
         self.__filter_video.append(filter_video)
     @property
     def event_table(self) -> Dict[str, Callable[['GraphicNovel'], int]]:
+        """Used to external interaction with dialog tree.
+        The event is triggered by dialog tree and call a python function"""
         return self.__events
     @property
     def video_filters(self) -> list:
         return self.__filter_video
     @video_filters.deleter
     def video_filters(self) -> None:
+        """Clear video filter with destructor"""
         self.__filter_video.clear()
 
     @property
@@ -135,6 +142,9 @@ class GraphicNovel(arcade.View):
 
     @characters.setter
     def characters(self, dict_char: Dict[str, arcade.Sprite]) -> None:
+        """Represent the group of internal Characters used in this dialog.
+        The info contain a list of sprites. Those sprite are used as 'expression'
+        or 'states' to change the image printed."""
         def __redim_sprite(w:int, h:int, spr:arcade.Sprite) -> None:
             if spr.width >= w:
                 spr.scale = 0.5
@@ -187,6 +197,7 @@ class GraphicNovel(arcade.View):
         self._next_step()
 
     def set_color_text(self, color: arcade.RGBA):
+        """Set the color of all text area used by internal GUI"""
         self.text_area.doc.set_style(0, 12,
                                      dict(color=arcade.get_four_byte_color(color)))
         self.title_area.label.document.set_style(0,
@@ -196,6 +207,7 @@ class GraphicNovel(arcade.View):
                                      dict(color=arcade.get_four_byte_color(color)))
 
     def setup_dialog(self, path_dialog: str) -> None:
+        """Parsing the dialog-tree and configure internal structures"""
         self.dialog = parser_dialog.parsing(path_dialog)
         self.ptr_blocks = iter(self.dialog.blocks[constants.INIT_BLOCK].block)
 
@@ -237,11 +249,13 @@ class GraphicNovel(arcade.View):
         self.ptr_blocks = iter(self.dialog.blocks[label].block)
         self.v_box.clear()
     def __jump_next_dialog(self, event: UIOnClickEvent) -> None:
+        """Used per Menu click instances"""
         jmp_label = self.__jump_next[event.source.text]
         self.jmp_next_dialog(jmp_label)
         self._next_step()
 
     def _remove_pg_from_lists(self, sprite: CharacterVN) -> None:
+        """Used to remove a Character by scene"""
         if sprite in self.left_side_screen:
             self.left_side_screen.remove(sprite)
         elif sprite in self.right_side_screen:
@@ -254,6 +268,7 @@ class GraphicNovel(arcade.View):
         self.__strategy_action[tok[0]](sprite, tok[1])
 
     def __action_video(self, name_pg:str, actions_char:List[str]) -> None:
+        """Use action on the character selected in the dialog-leaf"""
         if name_pg not in self.__dict_char:
             sprite = None
         else:
@@ -263,6 +278,7 @@ class GraphicNovel(arcade.View):
             self.__interpreting_action(sprite, tok)
 
     def __generate_regular_menu(self, cases:ast_dialog.BlockInstr) -> None:
+        """Configure the menu, with button centred on screen in vertical order"""
         for case in cases:
             button = UIFlatButton(text=case.label, width=200)
             self.__jump_next[case.label] = case.block[0].name
@@ -271,6 +287,8 @@ class GraphicNovel(arcade.View):
             self.v_box.add(button)
 
     def __generate_request(self, req_node:ast_dialog.Request) -> None:
+        """Configure a InputBox in the our GUI
+        to acept the message shall be press the NEXT DIALOG KEY"""
         self.box_dlg.remove(self.text_area)
         self.box_dlg.add(self.input_text)
         self._not_skippable = False
@@ -279,7 +297,14 @@ class GraphicNovel(arcade.View):
         self.input_text_check["evt"]   = req_node.event_name
         self.input_text_check["type"]  = req_node.type_request
 
+    def __adapt_text_var(self, text:str):
+        """used to generalize the dialogs.
+        The variables used in 'text' are specified in self.variables"""
+        return text
+
     def _next_step(self) -> None:
+        """Select the next dialog from Dialog-Tree and
+        dispose to print on screen"""
         try:
             node_dlg = next(self.ptr_blocks)
         except StopIteration:
@@ -289,8 +314,8 @@ class GraphicNovel(arcade.View):
             return
         self._not_skippable = True
         if isinstance(node_dlg, ast_dialog.Dialog):
-            self.title_area.text= node_dlg.char_name
-            self.text_area.set_text(node_dlg.text)
+            self.title_area.text= self.__adapt_text_var(node_dlg.char_name)
+            self.text_area.set_text(self.__adapt_text_var(node_dlg.text))
             self.__action_video(node_dlg.char_name, node_dlg.action)
         elif isinstance(node_dlg, ast_dialog.Menu):
             self._skip_dlg = False
@@ -308,6 +333,7 @@ class GraphicNovel(arcade.View):
             self.__generate_request(node_dlg)
 
     def update(self, delta_time: float) -> None:
+        """Go to next dialog update system"""
         if self._skip_time<=constants.SKIP_TIME:
             self._skip_time += delta_time
         elif self._skip_dlg:
@@ -316,6 +342,7 @@ class GraphicNovel(arcade.View):
         return super().update(delta_time)
 
     def on_key_press(self, symbol: int, modifiers: int) -> None:
+        """User keyboard input entry point"""
         if symbol not in self.input_handler.command_layout:
             return
         self.input_handler.command_layout[symbol](self)
