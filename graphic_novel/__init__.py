@@ -66,6 +66,7 @@ class GraphicNovel(arcade.View):
         """ Initializer """
         # Call the parent class initializer
         super().__init__()
+        self.DEBUG:bool = True
         self._skip_dlg  = False
         self._not_skippable = True
         self._skip_time = 0.0
@@ -227,6 +228,22 @@ class GraphicNovel(arcade.View):
             self.window.use()
             self.window.clear()
             self.draw()
+    
+    def debug_draw(self) -> None:
+        if len(self.left_side_screen):
+            arcade.draw_xywh_rectangle_outline(
+                self.left_side_screen[0].left, self.left_side_screen[0].bottom,
+                self.left_side_screen[-1].width, self.left_side_screen[-1].height,
+                arcade.color.GREEN)
+        if len(self.right_side_screen):
+            arcade.draw_xywh_rectangle_outline(
+                self.right_side_screen[-1].left, self.right_side_screen[-1].bottom,
+                self.right_side_screen[-1].width, self.right_side_screen[-1].height,
+                arcade.color.GREEN)
+        arcade.draw_rectangle_outline(
+            self.box_dlg.center_x, self.box_dlg.center_y, self.box_dlg.width,
+            self.box_dlg.height, arcade.color.GREEN)
+    
     def draw(self):
         arcade.draw_texture_rectangle(self.window.width//2, self.window.height//2,
             self.window.width, self.window.height, self.background_texture)
@@ -242,6 +259,8 @@ class GraphicNovel(arcade.View):
             self.manager.draw()
         if self._skip_dlg:
             arcade.draw_text("SKIPPING", 1, 1, font_size=15)
+        if self.DEBUG:
+            self.debug_draw()
     def jmp_next_dialog(self, label:str)->None:
         """Generic implementation of jump action between a dialog block to another"""
         assert label in self.dialog.blocks
